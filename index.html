@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Cotação - RFQ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        input[type="number"], input[type="date"], input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .readonly {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background: #f8f9fa;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .success-icon {
+            font-size: 64px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Solicitação de Cotação - RFQ</h1>
+            <div class="header-info">
+                <div class="info-item">
+                    <div class="info-label">Número RFQ:</div>
+                    <div id="rfqNumber">RFQ-2025-001</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Data de Emissão:</div>
+                    <div id="issueDate">01/10/2025</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Validade até:</div>
+                    <div id="validUntil">15/10/2025</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Fornecedor:</div>
+                    <div id="supplierName">Fornecedor ABC Ltda</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content" id="formContent">
+            <div class="alert alert-info">
+                📋 Por favor, preencha os campos de preço unitário e prazo de entrega para cada item. Os campos em cinza são apenas informativos.
+            </div>
+            
+            <div class="section-title">Itens Solicitados</div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 120px;">Código</th>
+                            <th>Descrição</th>
+                            <th style="width: 80px;">Qtd</th>
+                            <th style="width: 80px;">Unidade</th>
+                            <th style="width: 120px;">Preço Unit. (R$) *</th>
+                            <th style="width: 120px;">Total (R$)</th>
+                            <th style="width: 120px;">Prazo (dias) *</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTable">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" class="readonly" value="ITEM001" readonly></td>
+                            <td><input type="text" class="readonly" value="Parafuso M8 x 20mm Inox" readonly></td>
+                            <td><input type="number" class="readonly" value="1000" readonly></td>
+                            <td><input type="text" class="readonly" value="UN" readonly></td>
+                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="0" required></td>
+                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
+                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="0" required></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><input type="text" class="readonly" value="ITEM002" readonly></td>
+                            <td><input type="text" class="readonly" value="Arruela Lisa M8 Inox" readonly></td>
+                            <td><input type="number" class="readonly" value="1000" readonly></td>
+                            <td><input type="text" class="readonly" value="UN" readonly></td>
+                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="1" required></td>
+                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
+                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="1" required></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><input type="text" class="readonly" value="ITEM003" readonly></td>
+                            <td><input type="text" class="readonly" value="Porca Sextavada M8 Inox" readonly></td>
+                            <td><input type="number" class="readonly" value="500" readonly></td>
+                            <td><input type="text" class="readonly" value="UN" readonly></td>
+                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="2" required></td>
+                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
+                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="2" required></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="6" style="text-align: right; padding-right: 20px;">VALOR TOTAL DA COTAÇÃO:</td>
+                            <td><input type="text" class="readonly" id="grandTotal" value="R$ 0,00" readonly></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section-title">Informações Adicionais</div>
+            
+            <div class="form-group">
+                <label for="paymentTerms">Condições de Pagamento *</label>
+                <input type="text" id="paymentTerms" placeholder="Ex: 30 dias" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="warranty">Garantia</label>
+                <input type="text" id="warranty" placeholder="Ex: 12 meses">
+            </div>
+            
+            <div class="form-group">
+                <label for="observations">Observações</label>
+                <textarea id="observations" rows="4" placeholder="Informações adicionais sobre a cotação..."></textarea>
+            </div>
+            
+            <div class="button-container">
+                <button type="button" class="btn-cancel" onclick="window.history.back()">Cancelar</button>
+                <button type="button" class="btn-submit" onclick="submitQuotation()">Enviar Cotação</button>
+            </div>
+        </div>
+        
+        <div class="content success-message" id="successMessage">
+            <div class="success-icon">✅</div>
+            <h2>Cotação Enviada com Sucesso!</h2>
+            <p style="margin-top: 15px; color: #666;">Obrigado por sua resposta. Entraremos em contato em breve.</p>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos itens (viriam do n8n/SAP)
+        const items = [
+            { quantity: 1000 },
+            { quantity: 1000 },
+            { quantity: 500 }
+        ];
+
+        // Calcular totais quando preço mudar
+        document.querySelectorAll('.item-price').forEach((input, index) => {
+            input.addEventListener('input', function() {
+                const price = parseFloat(this.value) || 0;
+                const quantity = items[index].quantity;
+                const total = price * quantity;
+                
+                const totalCell = document.querySelectorAll('.total-item')[index];
+                totalCell.value = `R$ ${total.toFixed(2).replace('.', ',')}`;
+                
+                calculateGrandTotal();
+            });
+        });
+
+        function calculateGrandTotal() {
+            let grandTotal = 0;
+            document.querySelectorAll('.item-price').forEach((input, index) => {
+                const price = parseFloat(input.value) || 0;
+                grandTotal += price * items[index].quantity;
+            });
+            
+            document.getElementById('grandTotal').value = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
+        }
+
+        async function submitQuotation() {
+            // Validar campos obrigatórios
+            const prices = document.querySelectorAll('.item-price');
+            const deliveryTimes = document.querySelectorAll('.delivery-time');
+            const paymentTerms = document.getElementById('paymentTerms');
+            
+            let isValid = true;
+            
+            prices.forEach(input => {
+                if (!input.value || parseFloat(input.value) <= 0) {
+                    input.style.borderColor = 'red';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = '#ddd';
+                }
+            });
+            
+            deliveryTimes.forEach(input => {
+                if (!input.value || parseInt(input.value) <= 0) {
+                    input.style.borderColor = 'red';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = '#ddd';
+                }
+            });
+            
+            if (!paymentTerms.value) {
+                paymentTerms.style.borderColor = 'red';
+                isValid = false;
+            } else {
+                paymentTerms.style.borderColor = '#ddd';
+            }
+            
+            if (!isValid) {
+                alert('Por favor, preencha todos os campos obrigatórios (*)');
+                return;
+            }
+            
+            // Coletar dados da cotação
+            const quotationData = {
+                rfqNumber: document.getElementById('rfqNumber').textContent,
+                supplierName: document.getElementById('supplierName').textContent,
+                items: [],
+                paymentTerms: paymentTerms.value,
+                warranty: document.getElementById('warranty').value,
+                observations: document.getElementById('observations').value,
+                submittedAt: new Date().toISOString()
+            };
+            
+            // Coletar dados de cada item
+            prices.forEach((priceInput, index) => {
+                quotationData.items.push({
+                    itemCode: document.querySelectorAll('tbody tr')[index].querySelector('td:nth-child(2) input').value,
+                    description: document.querySelectorAll('tbody tr')[index].querySelector('td:nth-child(3) input').value,
+                    quantity: items[index].quantity,
+                    unitPrice: parseFloat(priceInput.value),
+                    total: parseFloat(priceInput.value) * items[index].quantity,
+                    deliveryDays: parseInt(deliveryTimes[index].value)
+                });
+            });
+            
+            // Enviar para o webhook do n8n
+            try {
+                const response = await fetch('https://seu-n8n.com/webhook/rfq-response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(quotationData)
+                });
+                
+                if (response.ok) {
+                    // Mostrar mensagem de sucesso
+                    document.getElementById('formContent').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    alert('Erro ao enviar cotação. Por favor, tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao enviar cotação. Por favor, verifique sua conexão e tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>
