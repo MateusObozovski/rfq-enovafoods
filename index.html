@@ -204,24 +204,118 @@
             <div class="header-info">
                 <div class="info-item">
                     <div class="info-label">Número RFQ:</div>
-                    <div id="rfqNumber">RFQ-2025-001</div>
+                    <div id="rfqNumber">Carregando...</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Data de Emissão:</div>
-                    <div id="issueDate">01/10/2025</div>
+                    <div id="issueDate">Carregando...</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Validade até:</div>
-                    <div id="validUntil">15/10/2025</div>
+                    <div id="validUntil">Carregando...</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Fornecedor:</div>
-                    <div id="supplierName">Fornecedor ABC Ltda</div>
+                    <div id="supplierName">Carregando...</div>
                 </div>
             </div>
         </div>
         
         <div class="content" id="formContent">
+            <div style="text-align:center; padding:50px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                <h3>Carregando dados da cotação...</h3>
+            </div>
+        </div>
+        
+        <div class="content success-message" id="successMessage">
+            <div class="success-icon">✅</div>
+            <h2>Cotação Enviada com Sucesso!</h2>
+            <p style="margin-top: 15px; color: #666;">Obrigado por sua resposta. Entraremos em contato em breve.</p>
+        </div>
+    </div>
+
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    let itemsData = [];
+
+    if (!token) {
+        document.body.innerHTML = `
+            <div style="text-align:center; padding:50px; font-family: Arial;">
+                <h2 style="color: #dc3545;">❌ Link Inválido</h2>
+                <p style="color: #666; margin-top: 20px;">
+                    Este link não é válido ou expirou.<br>
+                    Por favor, entre em contato com o departamento de compras.
+                </p>
+            </div>
+        `;
+    } else {
+        loadRFQData();
+    }
+
+    async function loadRFQData() {
+        try {
+            const url = `https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.message || 'Erro desconhecido');
+            }
+
+            if (data.status === 'submitted') {
+                document.getElementById('formContent').innerHTML = `
+                    <div style="text-align:center; padding:50px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                        <h3>Esta cotação já foi enviada anteriormente.</h3>
+                        <p style="color: #666; margin-top: 20px;">
+                            Obrigado pela sua resposta!
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            renderForm(data);
+            
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('formContent').innerHTML = `
+                <div style="text-align:center; padding:50px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                    <h3 style="color: #dc3545;">Erro ao carregar dados</h3>
+                    <p style="color: #666; margin-top: 20px;">
+                        ${error.message}<br><br>
+                        <a href="https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}" 
+                           target="_blank" style="color: #667eea;">
+                           Clique aqui para testar a URL direto
+                        </a>
+                    </p>
+                </div>
+            `;
+        }
+    }
+
+    function renderForm(data) {
+        itemsData = data.items;
+
+        document.getElementById('rfqNumber').textContent = data.rfqNumber;
+        document.getElementById('supplierName').textContent = data.supplierName;
+        document.getElementById('validUntil').textContent = formatDate(data.validUntil);
+        document.getElementById('issueDate').textContent = formatDate(data.createdAt);
+
+        let formHTML = `
             <div class="alert alert-info">
                 📋 Por favor, preencha os campos de preço unitário e prazo de entrega para cada item. Os campos em cinza são apenas informativos.
             </div>
@@ -242,37 +336,25 @@
                             <th style="width: 120px;">Prazo (dias) *</th>
                         </tr>
                     </thead>
-                    <tbody id="itemsTable">
-                        <tr>
-                            <td>1</td>
-                            <td><input type="text" class="readonly" value="ITEM001" readonly></td>
-                            <td><input type="text" class="readonly" value="Parafuso M8 x 20mm Inox" readonly></td>
-                            <td><input type="number" class="readonly" value="1000" readonly></td>
-                            <td><input type="text" class="readonly" value="UN" readonly></td>
-                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="0" required></td>
-                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
-                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="0" required></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td><input type="text" class="readonly" value="ITEM002" readonly></td>
-                            <td><input type="text" class="readonly" value="Arruela Lisa M8 Inox" readonly></td>
-                            <td><input type="number" class="readonly" value="1000" readonly></td>
-                            <td><input type="text" class="readonly" value="UN" readonly></td>
-                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="1" required></td>
-                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
-                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="1" required></td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td><input type="text" class="readonly" value="ITEM003" readonly></td>
-                            <td><input type="text" class="readonly" value="Porca Sextavada M8 Inox" readonly></td>
-                            <td><input type="number" class="readonly" value="500" readonly></td>
-                            <td><input type="text" class="readonly" value="UN" readonly></td>
-                            <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="2" required></td>
-                            <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
-                            <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="2" required></td>
-                        </tr>
+                    <tbody>
+        `;
+
+        data.items.forEach((item, index) => {
+            formHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><input type="text" class="readonly" value="${item.itemCode}" readonly></td>
+                    <td><input type="text" class="readonly" value="${item.description}" readonly></td>
+                    <td><input type="number" class="readonly" value="${item.quantity}" readonly></td>
+                    <td><input type="text" class="readonly" value="${item.unit}" readonly></td>
+                    <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="${index}" required></td>
+                    <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
+                    <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="${index}" required></td>
+                </tr>
+            `;
+        });
+
+        formHTML += `
                         <tr class="total-row">
                             <td colspan="6" style="text-align: right; padding-right: 20px;">VALOR TOTAL DA COTAÇÃO:</td>
                             <td><input type="text" class="readonly" id="grandTotal" value="R$ 0,00" readonly></td>
@@ -303,201 +385,12 @@
                 <button type="button" class="btn-cancel" onclick="window.history.back()">Cancelar</button>
                 <button type="button" class="btn-submit" onclick="submitQuotation()">Enviar Cotação</button>
             </div>
-        </div>
-        
-        <div class="content success-message" id="successMessage">
-            <div class="success-icon">✅</div>
-            <h2>Cotação Enviada com Sucesso!</h2>
-            <p style="margin-top: 15px; color: #666;">Obrigado por sua resposta. Entraremos em contato em breve.</p>
-        </div>
-    </div>
-
-    <script>
-    // ============================================
-    // 1. CAPTURAR TOKEN DA URL
-    // ============================================
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-
-    // Variável global para armazenar dados dos itens
-    let itemsData = [];
-
-    // ============================================
-    // 2. VALIDAR TOKEN
-    // ============================================
-    if (!token) {
-        document.body.innerHTML = `
-            <div style="text-align:center; padding:50px; font-family: Arial;">
-                <h2 style="color: #dc3545;">❌ Link Inválido</h2>
-                <p style="color: #666; margin-top: 20px;">
-                    Este link não é válido ou expirou.<br>
-                    Por favor, entre em contato com o departamento de compras.
-                </p>
-            </div>
         `;
-    } else {
-        // Token válido, carregar dados
-        loadRFQData();
-    }
 
-    // ============================================
-    // 3. BUSCAR DADOS DA RFQ
-    // ============================================
-    async function loadRFQData() {
-        try {
-            // Mostrar loading
-            document.getElementById('formContent').innerHTML = `
-                <div style="text-align:center; padding:50px;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
-                    <h3>Carregando dados da cotação...</h3>
-                    <p style="color: #666; margin-top: 10px;">Token: ${token}</p>
-                </div>
-            `;
-
-            console.log('=== INICIANDO BUSCA DE DADOS ===');
-            console.log('Token:', token);
-            const url = `https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}`;
-            console.log('URL:', url);
-
-            // Buscar dados usando o token
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            console.log('Status:', response.status);
-            console.log('Status Text:', response.statusText);
-            console.log('Response OK?', response.ok);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            console.log('Dados recebidos:', data);
-
-            // Verificar se houve erro
-            if (data.error) {
-                throw new Error(data.message || 'Erro desconhecido');
-            }
-
-            // Verificar se já foi respondida
-            if (data.status === 'submitted') {
-                document.getElementById('formContent').innerHTML = `
-                    <div style="text-align:center; padding:50px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-                        <h3>Esta cotação já foi enviada anteriormente.</h3>
-                        <p style="color: #666; margin-top: 20px;">
-                            Obrigado pela sua resposta!
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Preencher formulário com os dados
-            renderForm(data);
-            
-        } catch (error) {
-            console.error('=== ERRO COMPLETO ===');
-            console.error('Tipo:', error.name);
-            console.error('Mensagem:', error.message);
-            console.error('Stack:', error.stack);
-            
-            let errorMessage = error.message;
-            let errorDetails = '';
-            
-            // Identificar tipo de erro
-            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                errorMessage = 'Erro de conexão (CORS ou certificado SSL)';
-                errorDetails = `
-                    <strong>Problema identificado:</strong> Erro de CORS ou certificado SSL.<br><br>
-                    <strong>Soluções:</strong><br>
-                    1. No n8n, adicione os headers CORS no node "Respond to Webhook"<br>
-                    2. Ou use um proxy/túnel reverso (ngrok, cloudflare tunnel)<br>
-                    3. Teste abrir a URL direto no navegador primeiro<br><br>
-                    <a href="https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}" 
-                       target="_blank" style="color: #667eea;">
-                       Clique aqui para testar a URL direto
-                    </a>
-                `;
-            }
-            
-            document.getElementById('formContent').innerHTML = `
-                <div style="text-align:center; padding:50px;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
-                    <h3 style="color: #dc3545;">Erro ao carregar dados</h3>
-                    <p style="color: #666; margin-top: 20px;">
-                        ${errorMessage}
-                    </p>
-                    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
-                        ${errorDetails}
-                        <br>
-                        <strong>Debug Info:</strong><br>
-                        Token: ${token}<br>
-                        Erro: ${error.toString()}<br>
-                        <br>
-                        <em>Abra o Console (F12) para mais detalhes técnicos.</em>
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    // ============================================
-    // 4. RENDERIZAR FORMULÁRIO
-    // ============================================
-    function renderForm(data) {
-        // Armazenar dados dos itens globalmente
-        itemsData = data.items;
-
-        // Preencher cabeçalho
-        document.getElementById('rfqNumber').textContent = data.rfqNumber;
-        document.getElementById('supplierName').textContent = data.supplierName;
-        document.getElementById('validUntil').textContent = formatDate(data.validUntil);
-        document.getElementById('issueDate').textContent = formatDate(data.createdAt);
-
-        // Limpar e preencher tabela
-        const tbody = document.getElementById('itemsTable');
-        tbody.innerHTML = '';
-
-        data.items.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td><input type="text" class="readonly" value="${item.itemCode}" readonly></td>
-                <td><input type="text" class="readonly" value="${item.description}" readonly></td>
-                <td><input type="number" class="readonly" value="${item.quantity}" readonly></td>
-                <td><input type="text" class="readonly" value="${item.unit}" readonly></td>
-                <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="${index}" required></td>
-                <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
-                <td><input type="number" class="delivery-time" min="1" placeholder="Ex: 15" data-index="${index}" required></td>
-            `;
-            tbody.appendChild(row);
-        });
-
-        // Adicionar linha de total
-        const totalRow = document.createElement('tr');
-        totalRow.className = 'total-row';
-        totalRow.innerHTML = `
-            <td colspan="6" style="text-align: right; padding-right: 20px;">VALOR TOTAL DA COTAÇÃO:</td>
-            <td><input type="text" class="readonly" id="grandTotal" value="R$ 0,00" readonly></td>
-            <td></td>
-        `;
-        tbody.appendChild(totalRow);
-
-        // Restaurar o conteúdo original do formContent
-        document.getElementById('formContent').style.display = 'block';
-
-        // Adicionar event listeners
+        document.getElementById('formContent').innerHTML = formHTML;
         addEventListeners();
     }
 
-    // ============================================
-    // 5. EVENT LISTENERS
-    // ============================================
     function addEventListeners() {
         document.querySelectorAll('.item-price').forEach((input) => {
             input.addEventListener('input', function() {
@@ -524,9 +417,6 @@
         document.getElementById('grandTotal').value = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
     }
 
-    // ============================================
-    // 6. ENVIAR COTAÇÃO
-    // ============================================
     async function submitQuotation() {
         const prices = document.querySelectorAll('.item-price');
         const deliveryTimes = document.querySelectorAll('.delivery-time');
@@ -534,7 +424,6 @@
         
         let isValid = true;
         
-        // Validar preços
         prices.forEach(input => {
             if (!input.value || parseFloat(input.value) <= 0) {
                 input.style.borderColor = 'red';
@@ -544,7 +433,6 @@
             }
         });
         
-        // Validar prazos
         deliveryTimes.forEach(input => {
             if (!input.value || parseInt(input.value) <= 0) {
                 input.style.borderColor = 'red';
@@ -554,7 +442,6 @@
             }
         });
         
-        // Validar condições de pagamento
         if (!paymentTerms.value) {
             paymentTerms.style.borderColor = 'red';
             isValid = false;
@@ -567,9 +454,8 @@
             return;
         }
         
-        // Coletar dados
         const quotationData = {
-            token: token, // IMPORTANTE: enviar o token!
+            token: token,
             rfqNumber: document.getElementById('rfqNumber').textContent,
             supplierName: document.getElementById('supplierName').textContent,
             items: [],
@@ -579,7 +465,6 @@
             submittedAt: new Date().toISOString()
         };
         
-        // Coletar dados de cada item
         prices.forEach((priceInput, index) => {
             quotationData.items.push({
                 itemCode: itemsData[index].itemCode,
@@ -591,7 +476,6 @@
             });
         });
         
-        // Enviar para o webhook
         try {
             const response = await fetch('https://automacao.enovafoods.com.br:5678/webhook/rfq-response', {
                 method: 'POST',
@@ -613,14 +497,10 @@
         }
     }
 
-    // ============================================
-    // 7. FUNÇÕES AUXILIARES
-    // ============================================
     function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('pt-BR');
     }
-</script>
+    </script>
 </body>
-
 </html>
