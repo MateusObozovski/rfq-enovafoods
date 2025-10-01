@@ -407,7 +407,7 @@
             
             // Enviar para o webhook do n8n
             try {
-                const response = await fetch('https://seu-n8n.com/webhook/rfq-response', {
+                const response = await fetch('https://automacao.enovafoods.com.br:5678/webhook/rfq-response', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -429,4 +429,5 @@
         }
     </script>
 </body>
+
 </html>
