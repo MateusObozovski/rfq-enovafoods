@@ -362,7 +362,6 @@
             // Buscar dados usando o token
             const response = await fetch(url, {
                 method: 'GET',
-                mode: 'cors', // Explicitamente usar CORS
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -625,5 +624,3 @@
 </body>
 
 </html>
-
-
