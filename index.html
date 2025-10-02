@@ -239,19 +239,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     let itemsData = [];
-    
-    // Condições de pagamento do SAP (você pode buscar isso dinamicamente depois)
-    const paymentTermsOptions = [
-        { value: '', text: 'Selecione...' },
-        { value: '1', text: '30 dias' },
-        { value: '2', text: '60 dias' },
-        { value: '3', text: '90 dias' },
-        { value: '4', text: '30/60/90 dias' },
-        { value: '5', text: 'À vista' },
-        { value: '6', text: '7 dias' },
-        { value: '7', text: '14 dias' },
-        { value: '8', text: '45 dias' }
-    ];
+    let paymentTermsOptions = [];
 
     if (!token) {
         document.body.innerHTML = `
@@ -264,6 +252,24 @@
             </div>
         `;
     } else {
+        loadPaymentTerms();
+    }
+
+    async function loadPaymentTerms() {
+        try {
+            const response = await fetch('https://automacao.enovafoods.com.br:5678/webhook/get-payment-terms');
+            if (response.ok) {
+                paymentTermsOptions = await response.json();
+            }
+        } catch (error) {
+            console.error('Erro ao carregar condições de pagamento:', error);
+            // Fallback para opções estáticas
+            paymentTermsOptions = [
+                { value: '1', text: '30 dias' },
+                { value: '2', text: '60 dias' },
+                { value: '3', text: 'À vista' }
+            ];
+        }
         loadRFQData();
     }
 
@@ -328,7 +334,6 @@
         document.getElementById('validUntil').textContent = formatDate(data.validUntil);
         document.getElementById('issueDate').textContent = formatDate(data.createdAt);
 
-        // Data mínima é amanhã
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const minDate = tomorrow.toISOString().split('T')[0];
@@ -387,7 +392,17 @@
             <div class="form-group">
                 <label for="paymentTerms">Condições de Pagamento *</label>
                 <select id="paymentTerms" required>
+                    <option value="">Selecione...</option>
                     ${paymentTermsOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="freightType">Tipo de Frete *</label>
+                <select id="freightType" required>
+                    <option value="">Selecione...</option>
+                    <option value="0">CIF (Custo, Seguro e Frete)</option>
+                    <option value="1">FOB (Free On Board)</option>
                 </select>
             </div>
             
@@ -445,6 +460,7 @@
         const prices = document.querySelectorAll('.item-price');
         const deliveryDates = document.querySelectorAll('.delivery-date');
         const paymentTerms = document.getElementById('paymentTerms');
+        const freightType = document.getElementById('freightType');
         
         let isValid = true;
         
@@ -473,12 +489,20 @@
             paymentTerms.style.borderColor = '#ddd';
         }
         
+        if (!freightType.value) {
+            freightType.style.borderColor = 'red';
+            isValid = false;
+        } else {
+            freightType.style.borderColor = '#ddd';
+        }
+        
         if (!isValid) {
             alert('Por favor, preencha todos os campos obrigatórios (*)');
             return;
         }
         
         const paymentTermsText = paymentTerms.options[paymentTerms.selectedIndex].text;
+        const freightTypeText = freightType.options[freightType.selectedIndex].text;
         
         const quotationData = {
             token: token,
@@ -487,6 +511,8 @@
             items: [],
             paymentTerms: paymentTermsText,
             paymentTermsCode: paymentTerms.value,
+            freightType: freightTypeText,
+            freightTypeCode: freightType.value,
             observations: document.getElementById('observations').value,
             submittedAt: new Date().toISOString()
         };
