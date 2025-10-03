@@ -273,58 +273,78 @@
         loadRFQData();
     }
 
-    async function loadRFQData() {
-        try {
-            const url = `https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+async function loadRFQData() {
+    try {
+        const url = `https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (data.error) {
-                throw new Error(data.message || 'Erro desconhecido');
-            }
+        if (data.error) {
+            throw new Error(data.message || 'Erro desconhecido');
+        }
 
-            if (data.status === 'submitted') {
-                document.getElementById('formContent').innerHTML = `
-                    <div style="text-align:center; padding:50px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-                        <h3>Esta cotação já foi enviada anteriormente.</h3>
-                        <p style="color: #666; margin-top: 20px;">
-                            Obrigado pela sua resposta!
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-
-            renderForm(data);
-            
-        } catch (error) {
-            console.error('Erro:', error);
+        // Verificar se já foi respondida
+        if (data.status === 'submitted') {
             document.getElementById('formContent').innerHTML = `
                 <div style="text-align:center; padding:50px;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
-                    <h3 style="color: #dc3545;">Erro ao carregar dados</h3>
+                    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                    <h3>Esta cotação já foi enviada anteriormente.</h3>
                     <p style="color: #666; margin-top: 20px;">
-                        ${error.message}<br><br>
-                        <a href="https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}" 
-                           target="_blank" style="color: #667eea;">
-                           Clique aqui para testar a URL direto
-                        </a>
+                        Obrigado pela sua resposta!
                     </p>
                 </div>
             `;
+            return;
         }
+
+        // Verificar se a validade expirou
+        const validUntil = new Date(data.validUntil);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (validUntil < today) {
+            document.getElementById('formContent').innerHTML = `
+                <div style="text-align:center; padding:50px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">⏰</div>
+                    <h3>Esta cotação expirou</h3>
+                    <p style="color: #666; margin-top: 20px;">
+                        O prazo para envio da cotação era até ${formatDate(data.validUntil)}.<br>
+                        Por favor, entre em contato com o departamento de compras.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        renderForm(data);
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('formContent').innerHTML = `
+            <div style="text-align:center; padding:50px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                <h3 style="color: #dc3545;">Erro ao carregar dados</h3>
+                <p style="color: #666; margin-top: 20px;">
+                    ${error.message}<br><br>
+                    <a href="https://automacao.enovafoods.com.br:5678/webhook/get-rfq-data?token=${token}" 
+                       target="_blank" style="color: #667eea;">
+                       Clique aqui para testar a URL direto
+                    </a>
+                </p>
+            </div>
+        `;
     }
+}
 
     function renderForm(data) {
         itemsData = data.items;
@@ -558,4 +578,5 @@
     </script>
 </body>
 </html>
+
 
