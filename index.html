@@ -476,100 +476,118 @@ async function loadRFQData() {
         return diffDays > 0 ? diffDays : 0;
     }
 
-    async function submitQuotation() {
-        const prices = document.querySelectorAll('.item-price');
-        const deliveryDates = document.querySelectorAll('.delivery-date');
-        const paymentTerms = document.getElementById('paymentTerms');
-        const freightType = document.getElementById('freightType');
-        
-        let isValid = true;
-        
-        prices.forEach(input => {
-            if (!input.value || parseFloat(input.value) <= 0) {
-                input.style.borderColor = 'red';
-                isValid = false;
-            } else {
-                input.style.borderColor = '#ddd';
-            }
-        });
-        
-        deliveryDates.forEach(input => {
-            if (!input.value) {
-                input.style.borderColor = 'red';
-                isValid = false;
-            } else {
-                input.style.borderColor = '#ddd';
-            }
-        });
-        
-        if (!paymentTerms.value) {
-            paymentTerms.style.borderColor = 'red';
+async function submitQuotation() {
+    const prices = document.querySelectorAll('.item-price');
+    const deliveryDates = document.querySelectorAll('.delivery-date');
+    const paymentTerms = document.getElementById('paymentTerms');
+    const freightType = document.getElementById('freightType');
+    
+    let isValid = true;
+    
+    prices.forEach(input => {
+        if (!input.value || parseFloat(input.value) <= 0) {
+            input.style.borderColor = 'red';
             isValid = false;
         } else {
-            paymentTerms.style.borderColor = '#ddd';
+            input.style.borderColor = '#ddd';
         }
-        
-        if (!freightType.value) {
-            freightType.style.borderColor = 'red';
+    });
+    
+    deliveryDates.forEach(input => {
+        if (!input.value) {
+            input.style.borderColor = 'red';
             isValid = false;
         } else {
-            freightType.style.borderColor = '#ddd';
+            input.style.borderColor = '#ddd';
         }
-        
-        if (!isValid) {
-            alert('Por favor, preencha todos os campos obrigatórios (*)');
-            return;
-        }
-        
-        const paymentTermsText = paymentTerms.options[paymentTerms.selectedIndex].text;
-        const freightTypeText = freightType.options[freightType.selectedIndex].text;
-        
-        const quotationData = {
-            token: token,
-            rfqNumber: document.getElementById('rfqNumber').textContent,
-            supplierName: document.getElementById('supplierName').textContent,
-            items: [],
-            paymentTerms: paymentTermsText,
-            paymentTermsCode: paymentTerms.value,
-            freightType: freightTypeText,
-            freightTypeCode: freightType.value,
-            observations: document.getElementById('observations').value,
-            submittedAt: new Date().toISOString()
-        };
-        
-        prices.forEach((priceInput, index) => {
-            const deliveryDate = deliveryDates[index].value;
-            quotationData.items.push({
-                itemCode: itemsData[index].itemCode,
-                description: itemsData[index].description,
-                quantity: itemsData[index].quantity,
-                unitPrice: parseFloat(priceInput.value),
-                total: parseFloat(priceInput.value) * itemsData[index].quantity,
-                deliveryDate: deliveryDate,
-                deliveryDays: calculateDaysDifference(deliveryDate)
-            });
-        });
-        
-        try {
-            const response = await fetch('https://automacao.enovafoods.com.br:5678/webhook/rfq-response', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(quotationData)
-            });
-            
-            if (response.ok) {
-                document.getElementById('formContent').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
-            } else {
-                alert('Erro ao enviar cotação. Por favor, tente novamente.');
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao enviar cotação. Por favor, verifique sua conexão e tente novamente.');
-        }
+    });
+    
+    if (!paymentTerms.value) {
+        paymentTerms.style.borderColor = 'red';
+        isValid = false;
+    } else {
+        paymentTerms.style.borderColor = '#ddd';
     }
+    
+    if (!freightType.value) {
+        freightType.style.borderColor = 'red';
+        isValid = false;
+    } else {
+        freightType.style.borderColor = '#ddd';
+    }
+    
+    if (!isValid) {
+        alert('Por favor, preencha todos os campos obrigatórios (*)');
+        return;
+    }
+    
+    // Desabilitar botão e mostrar loading
+    const submitBtn = document.querySelector('.btn-submit');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Enviando cotação...';
+    submitBtn.style.opacity = '0.6';
+    submitBtn.style.cursor = 'not-allowed';
+    
+    const paymentTermsText = paymentTerms.options[paymentTerms.selectedIndex].text;
+    const freightTypeText = freightType.options[freightType.selectedIndex].text;
+    
+    const quotationData = {
+        token: token,
+        rfqNumber: document.getElementById('rfqNumber').textContent,
+        supplierName: document.getElementById('supplierName').textContent,
+        items: [],
+        paymentTerms: paymentTermsText,
+        paymentTermsCode: paymentTerms.value,
+        freightType: freightTypeText,
+        freightTypeCode: freightType.value,
+        observations: document.getElementById('observations').value,
+        submittedAt: new Date().toISOString()
+    };
+    
+    prices.forEach((priceInput, index) => {
+        const deliveryDate = deliveryDates[index].value;
+        quotationData.items.push({
+            itemCode: itemsData[index].itemCode,
+            description: itemsData[index].description,
+            quantity: itemsData[index].quantity,
+            unitPrice: parseFloat(priceInput.value),
+            total: parseFloat(priceInput.value) * itemsData[index].quantity,
+            deliveryDate: deliveryDate,
+            deliveryDays: calculateDaysDifference(deliveryDate)
+        });
+    });
+    
+    try {
+        const response = await fetch('https://automacao.enovafoods.com.br:5678/webhook/rfq-response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(quotationData)
+        });
+        
+        if (response.ok) {
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        } else {
+            // Reabilitar botão em caso de erro
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            alert('Erro ao enviar cotação. Por favor, tente novamente.');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        // Reabilitar botão em caso de erro
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        alert('Erro ao enviar cotação. Por favor, verifique sua conexão e tente novamente.');
+    }
+}
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -578,6 +596,7 @@ async function loadRFQData() {
     </script>
 </body>
 </html>
+
 
 
 
