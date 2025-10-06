@@ -195,6 +195,11 @@
             color: #28a745;
             margin-bottom: 20px;
         }
+
+        .item-observation {
+        min-width: 180px;
+        }
+
     </style>
 </head>
 <body>
@@ -377,6 +382,7 @@ async function loadRFQData() {
                             <th style="width: 120px;">Preço Unit. (R$) *</th>
                             <th style="width: 120px;">Total (R$)</th>
                             <th style="width: 140px;">Data Entrega *</th>
+                            <th style="width: 200px;">Observação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -393,6 +399,7 @@ async function loadRFQData() {
                     <td><input type="number" class="item-price" step="0.01" min="0" placeholder="0,00" data-index="${index}" required></td>
                     <td><input type="text" class="readonly total-item" value="R$ 0,00" readonly></td>
                     <td><input type="date" class="delivery-date" min="${minDate}" data-index="${index}" required></td>
+                    <td><input type="text" class="item-observation" placeholder="(opcional)" data-index="${index}"></td>
                 </tr>
             `;
         });
@@ -547,6 +554,7 @@ async function submitQuotation() {
     
     prices.forEach((priceInput, index) => {
         const deliveryDate = deliveryDates[index].value;
+        const observationInput = document.querySelectorAll('.item-observation')[index];
         quotationData.items.push({
             itemCode: itemsData[index].itemCode,
             description: itemsData[index].description,
@@ -554,7 +562,8 @@ async function submitQuotation() {
             unitPrice: parseFloat(priceInput.value),
             total: parseFloat(priceInput.value) * itemsData[index].quantity,
             deliveryDate: deliveryDate,
-            deliveryDays: calculateDaysDifference(deliveryDate)
+            deliveryDays: calculateDaysDifference(deliveryDate),
+            observation: observationInput?.value?.trim() || ""
         });
     });
     
@@ -596,6 +605,7 @@ async function submitQuotation() {
     </script>
 </body>
 </html>
+
 
 
 
