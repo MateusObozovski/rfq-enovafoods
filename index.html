@@ -319,6 +319,8 @@ async function loadRFQData() {
 
         // Verificar se a validade expirou
         const validUntil = new Date(data.validUntil);
+        validUntil.setDate(validUntil.getDate() + 1);
+        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -610,6 +612,7 @@ async function submitQuotation() {
     </script>
 </body>
 </html>
+
 
 
 
