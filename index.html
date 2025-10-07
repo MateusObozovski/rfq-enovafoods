@@ -363,7 +363,7 @@ async function loadRFQData() {
 
         document.getElementById('rfqNumber').textContent = data.rfqNumber;
         document.getElementById('supplierName').textContent = data.supplierName;
-        document.getElementById('validUntil').textContent = formatDate(data.validUntil);
+        document.getElementById('validUntil').textContent = formatDate(validUntil);
         document.getElementById('issueDate').textContent = formatDate(data.createdAt);
 
         const tomorrow = new Date();
@@ -612,6 +612,7 @@ async function submitQuotation() {
     </script>
 </body>
 </html>
+
 
 
 
