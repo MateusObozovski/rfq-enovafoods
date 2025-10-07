@@ -361,6 +361,9 @@ async function loadRFQData() {
     function renderForm(data) {
         itemsData = data.items;
 
+            const validUntil = new Date(data.validUntil);
+            validUntil.setDate(validUntil.getDate() + 1);
+
         document.getElementById('rfqNumber').textContent = data.rfqNumber;
         document.getElementById('supplierName').textContent = data.supplierName;
         document.getElementById('validUntil').textContent = formatDate(validUntil);
@@ -612,6 +615,7 @@ async function submitQuotation() {
     </script>
 </body>
 </html>
+
 
 
 
