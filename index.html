@@ -377,9 +377,9 @@
         document.getElementById('issueDate').textContent = formatDate(data.createdAt);
 
         // 🔹 NOVO TRECHO: Atualiza o título com a filial
-        if (data.Filial) {
+        if (data.filial) {
             // Atualiza o <title> da aba do navegador
-            document.title = `Solicitação de Cotação - ${data.Filial}`;
+            document.title = `Solicitação de Cotação - ${data.filial}`;
 
             // Atualiza o título exibido na página (dentro do <h1>)
             const titleEl = document.querySelector('.header h1');
@@ -388,7 +388,7 @@
                     <img src="https://raw.githubusercontent.com/MateusObozovski/rfq-enovafoods/main/logo_simples.png" 
                          alt="Logo Enova Foods" 
                          style="height: 40px;">
-                    Solicitação de Cotação - ${data.Filial}
+                    Solicitação de Cotação - ${data.filial}
                 `;
             }
         }
@@ -709,5 +709,6 @@
     </script>
 </body>
 </html>
+
 
 
